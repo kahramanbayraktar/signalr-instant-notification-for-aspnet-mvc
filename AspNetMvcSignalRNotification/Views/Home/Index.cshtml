@@ -1,0 +1,95 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="jumbotron">
+    <h1>ASP.NET</h1>
+    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+    <p>
+        @for (var i = 0; i < 5; i++)
+        {
+            <a href="#" class="btn btn-primary btn-lg mybuttonclass" data-id="@(i + 1)" title="Run Task #@(i + 1)">
+                <i class="fa fa-play fa-lg" style="color: #fff"></i>&nbsp;&nbsp;Run Task #@(i + 1)
+            </a>
+        }
+    </p>
+</div>
+
+<script>
+    $("body").on("click", ".mybuttonclass", function (e) {
+
+        var myBtn = $(e.currentTarget);
+        var itemId = myBtn.attr("data-id");
+        var innerSpan = $(myBtn.get(0).firstElementChild);
+        e.preventDefault();
+
+        swal({
+            title: "Are you sure?",
+            text: "You are about to run Task #" + itemId,
+            icon: "warning",
+            buttons: true,
+            dangerMode: true
+        }).then(function (value) {
+
+            if (value === true) {
+                myBtn.addClass("disabled");
+                innerSpan.addClass("fa-spin");
+
+                $.ajax({
+                    url: '@Url.Action("_MyAction", "Home")',
+                    data: { "id": itemId },
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.success === true) {
+                            swal({
+                                title: "Done!",
+                                text: result.message,
+                                icon: "success"
+                            });
+                        } else {
+                            swal({
+                                title: "Error!",
+                                text: result.message,
+                                icon: "error"
+                            });
+                        }
+
+                        myBtn.removeClass("disabled");
+                        innerSpan.removeClass("fa-spin");
+                    },
+                    error: function (xhr, textStatus, error) {
+                        swal({
+                            title: "Error!",
+                            text: xhr.statusText,
+                            icon: textStatus
+                        });
+
+                        myBtn.removeClass("disabled");
+                        innerSpan.removeClass("fa-spin");
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+<script>
+    $(function () {
+        // Reference the auto-generated proxy for the hub.
+        var progress = $.connection.notificationHub;
+
+        // Create a function that the hub can call back to display messages.
+        progress.client.DisplayNotification = function (message) {
+
+            toastr.options = {
+                positionClass: "toast-bottom-right",
+                timeOut: 3000
+            };
+            toastr.warning(message);
+        };
+
+        $.connection.hub.start().done(function () {
+            var connectionId = $.connection.hub.id;
+        });
+    });
+</script>
